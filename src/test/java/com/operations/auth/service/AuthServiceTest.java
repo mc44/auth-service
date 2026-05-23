@@ -29,7 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
-  private static final String TENANT = "blog-cms";
+  private static final String TENANT = "my-app";
 
   @Mock
   private TenantRepository tenantRepository;

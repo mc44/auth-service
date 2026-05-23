@@ -1,5 +1,9 @@
-# Solo auth development — includes local Mongo. For CMS full stack use infrastructure/docker or deploy/.
+# Local dev — Mongo + auth-service (same layout as production, single file).
 name: auth-dev
+
+networks:
+  auth-platform:
+    name: auth-platform
 
 services:
   mongo:
@@ -9,6 +13,8 @@ services:
       - "27017:27017"
     volumes:
       - auth-dev-mongo:/data/db
+    networks:
+      - auth-platform
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
@@ -17,14 +23,17 @@ services:
 
   auth-service:
     build: .
+    container_name: auth-service
     restart: unless-stopped
     ports:
       - "8081:8081"
+    networks:
+      - auth-platform
     environment:
       AUTH_MONGODB_URI: mongodb://mongo:27017
       AUTH_MONGODB_DATABASE: auth
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-change-me-in-env-please-change-me-in-env}
-      AUTH_SEED_TENANT_ID: ${AUTH_SEED_TENANT_ID:-blog-cms}
+      AUTH_SEED_TENANT_ID: ${AUTH_SEED_TENANT_ID:-my-app}
       AUTH_SEED_USER_EMAIL: ${AUTH_SEED_USER_EMAIL:-user@example.com}
       AUTH_SEED_USER_PASSWORD: ${AUTH_SEED_USER_PASSWORD:-change-me}
     depends_on:

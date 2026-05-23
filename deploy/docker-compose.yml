@@ -1,0 +1,36 @@
+# Auth application container — requires deploy/infrastructure (mongo on network auth-platform).
+name: auth-app
+
+networks:
+  auth-platform:
+    external: true
+    name: auth-platform
+
+services:
+  auth-service:
+    image: ${AUTH_IMAGE:-ghcr.io/${GITHUB_REPOSITORY_OWNER:-local}/auth-service:${AUTH_IMAGE_TAG:-latest}}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_APPLICATION_NAME: auth-service
+      AUTH_MONGODB_URI: mongodb://mongo:27017
+      AUTH_MONGODB_DATABASE: auth
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?Set AUTH_JWT_SECRET in deploy/.env}
+      AUTH_JWT_ISSUER: ${AUTH_JWT_ISSUER:-auth-service}
+      AUTH_ACCESS_TOKEN_TTL_SECONDS: ${AUTH_ACCESS_TOKEN_TTL_SECONDS:-900}
+      AUTH_REFRESH_TOKEN_TTL_SECONDS: ${AUTH_REFRESH_TOKEN_TTL_SECONDS:-1209600}
+      AUTH_REFRESH_TOKEN_HMAC_KEY: ${AUTH_REFRESH_TOKEN_HMAC_KEY:?Set AUTH_REFRESH_TOKEN_HMAC_KEY in deploy/.env}
+      AUTH_SEED_TENANT_ID: ${AUTH_SEED_TENANT_ID:-my-app}
+      AUTH_SEED_USER_EMAIL: ${AUTH_SEED_USER_EMAIL:-user@example.com}
+      AUTH_SEED_USER_PASSWORD: ${AUTH_SEED_USER_PASSWORD:-change-me}
+      AUTH_SEED_USER_ROLE: ${AUTH_SEED_USER_ROLE:-ROLE_OPERATOR}
+      AUTH_REDIS_ENABLED: ${AUTH_REDIS_ENABLED:-false}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    networks:
+      - auth-platform

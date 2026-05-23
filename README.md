@@ -1,55 +1,53 @@
 # auth-service
 
-Multi-tenant JWT auth (login, refresh, logout). MongoDB logical database: **`auth`**.
+Multi-tenant authentication API: login, refresh, logout, JWT issuance.
 
-Designed to run **standalone** (this repo) or as part of the [blog-cms deploy stack](../deploy/README.md).
+## Deploy on a server
 
-## Prerequisites
+Use [deploy/README.md](deploy/README.md):
 
-| Mode | Mongo |
-|------|--------|
-| **Solo dev** | Included: `docker compose -f docker-compose.dev.yml up --build` |
-| **CMS / VPS** | Start [deploy/prereqs](../deploy/prereqs/README.md) first — shared `mongo` on network `cms-shared` |
+1. Start **MongoDB** (required).
+2. Start **Redis** (optional).
+3. Configure `deploy/.env` and start the **auth-service** container.
 
-Optional **Redis**: `docker compose --profile redis up -d` in `deploy/prereqs`, then set `AUTH_REDIS_ENABLED=true`.
+Infrastructure details: [deploy/infrastructure/README.md](deploy/infrastructure/README.md).
 
-## Local run (JAR)
+## Local development
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Or:
 
 ```bash
 cp config/localhost.properties.example config/localhost.properties
-# Start Mongo on localhost:27017 (prereqs or dev compose)
 mvn spring-boot:run
 ```
 
-## Login (tenant-scoped)
+## API
 
-```bash
-curl -s -X POST http://localhost:8081/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"tenantId":"blog-cms","email":"user@example.com","password":"change-me"}'
-```
+| Method | Path | Body |
+|--------|------|------|
+| POST | `/auth/login` | `{ "tenantId", "email", "password" }` |
+| POST | `/auth/refresh` | `{ "refreshToken" }` |
+| POST | `/auth/logout` | `{ "refreshToken" }` |
 
-JWT includes claims: `sub`, `tenantId`, `email`, `roles`.
+JWT claims: `sub`, `tenantId`, `email`, `roles`.
 
-## Environment variables
+## Gateway integration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AUTH_MONGODB_URI` | `mongodb://mongo:27017` | Mongo connection |
-| `AUTH_MONGODB_DATABASE` | `auth` | Logical database |
-| `AUTH_JWT_SECRET` | (required prod) | HS256 signing key (shared with gateway) |
-| `AUTH_SEED_TENANT_ID` | `blog-cms` | Bootstrap tenant |
-| `AUTH_SEED_USER_EMAIL` / `PASSWORD` | see `.env.example` | Dev seed user |
-| `AUTH_REDIS_ENABLED` | `false` | Enable when Redis wired |
+Consumers (API gateway) route `/auth/**` to this service and use the same `AUTH_JWT_SECRET`. See [docs/GATEWAY_INTEGRATION.md](docs/GATEWAY_INTEGRATION.md).
 
-## Plug into blog-cms
+## Configuration
 
-1. Run `deploy/prereqs` (mongo on `cms-shared`).
-2. Set the same `AUTH_JWT_SECRET` on gateway and auth.
-3. Use `deploy/docker-compose.yml` or pull `ghcr.io/.../auth-service:<tag>`.
+| Variable | Description |
+|----------|-------------|
+| `AUTH_MONGODB_URI` | Default `mongodb://mongo:27017` |
+| `AUTH_MONGODB_DATABASE` | `auth` |
+| `AUTH_JWT_SECRET` | Required in production |
+| `AUTH_REFRESH_TOKEN_HMAC_KEY` | Refresh token hashing |
+| `AUTH_SEED_TENANT_ID` | On first startup, creates this tenant + seed user if missing; login `tenantId` must match |
+| `AUTH_REDIS_ENABLED` | `true` when Redis container is running |
 
-Consumer apps set `BLOG_TENANT_ID=blog-cms` and validate the `tenantId` JWT claim.
-
-## Data durability
-
-Mongo data lives in Docker volume `mongo-data` (prereqs) or `auth-dev-mongo` (solo dev). Avoid `docker compose down -v` unless resetting dev data.
+Full list: [deploy/.env.example](deploy/.env.example).

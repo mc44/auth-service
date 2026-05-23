@@ -1,0 +1,35 @@
+# Auth platform infrastructure — Mongo + optional Redis. Run from auth-service repo only.
+name: auth-platform
+
+networks:
+  auth-platform:
+    name: auth-platform
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - auth-mongo-data:/data/db
+    networks:
+      - auth-platform
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - auth-platform
+    profiles:
+      - redis
+
+volumes:
+  auth-mongo-data:

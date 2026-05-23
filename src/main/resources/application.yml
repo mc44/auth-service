@@ -26,7 +26,7 @@ auth:
 
 seed:
   tenant:
-    id: ${AUTH_SEED_TENANT_ID:blog-cms}
+    id: ${AUTH_SEED_TENANT_ID:my-app}
   user:
     email: ${AUTH_SEED_USER_EMAIL:user@example.com}
     password: ${AUTH_SEED_USER_PASSWORD:change-me}
