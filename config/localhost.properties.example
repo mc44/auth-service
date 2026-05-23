@@ -1,0 +1,15 @@
+# Copy to config/localhost.properties (gitignored) for local IDE / mvn spring-boot:run
+server.port=8081
+spring.data.mongodb.uri=mongodb://localhost:27017
+spring.data.mongodb.database=auth
+auth.jwt.secret=dev-only-change-me-please-use-long-secret
+auth.jwt.issuer=auth-service
+seed.tenant.id=blog-cms
+seed.user.email=user@example.com
+seed.user.password=change-me
+seed.user.role=ROLE_OPERATOR
+
+# Optional — start deploy/prereqs with: docker compose --profile redis up -d
+# auth.redis.enabled=true
+# spring.data.redis.host=localhost
+# spring.data.redis.port=6379
