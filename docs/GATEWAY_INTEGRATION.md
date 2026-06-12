@@ -28,7 +28,7 @@ spring:
             - Path=/auth/**
 ```
 
-`AUTH_SERVICE_URL` must reach a running auth-service instance (see [deploy/README.md](../deploy/README.md)).
+`AUTH_SERVICE_URL` must reach a running auth-service instance (see [README.md Docker guide](../README.md#docker-guide)).
 
 ### Shared secret
 

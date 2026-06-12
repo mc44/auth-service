@@ -5,7 +5,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [[ ! -f .env ]]; then
-  echo "Missing deploy/.env — copy from deploy/.env.example"
+  echo "Missing deploy/.env"
+  echo "  cd deploy && cp .env.example .env"
+  echo "  Edit required vars — see README.md Docker guide"
   exit 1
 fi
 
