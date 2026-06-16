@@ -16,6 +16,7 @@ import com.operations.auth.model.UserDocument;
 import com.operations.auth.repository.RefreshTokenRepository;
 import com.operations.auth.repository.TenantRepository;
 import com.operations.auth.repository.UserRepository;
+import com.operations.auth.security.LoginAttemptService;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,8 @@ class AuthServiceTest {
   private RefreshTokenRepository refreshTokenRepository;
   @Mock
   private PasswordEncoder passwordEncoder;
+  @Mock
+  private LoginAttemptService loginAttemptService;
 
   private TokenService tokenService;
   private AuthService authService;
@@ -52,7 +55,12 @@ class AuthServiceTest {
         1209600,
         "change-refresh-hmac-key");
     authService = new AuthService(
-        tenantRepository, userRepository, refreshTokenRepository, tokenService, passwordEncoder);
+        tenantRepository,
+        userRepository,
+        refreshTokenRepository,
+        tokenService,
+        passwordEncoder,
+        loginAttemptService);
   }
 
   @Test

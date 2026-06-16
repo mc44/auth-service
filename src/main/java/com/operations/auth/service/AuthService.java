@@ -8,6 +8,7 @@ import com.operations.auth.model.UserDocument;
 import com.operations.auth.repository.RefreshTokenRepository;
 import com.operations.auth.repository.TenantRepository;
 import com.operations.auth.repository.UserRepository;
+import com.operations.auth.security.LoginAttemptService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,29 +22,36 @@ public class AuthService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final TokenService tokenService;
   private final PasswordEncoder passwordEncoder;
+  private final LoginAttemptService loginAttemptService;
 
   public AuthService(
       TenantRepository tenantRepository,
       UserRepository userRepository,
       RefreshTokenRepository refreshTokenRepository,
       TokenService tokenService,
-      PasswordEncoder passwordEncoder) {
+      PasswordEncoder passwordEncoder,
+      LoginAttemptService loginAttemptService) {
     this.tenantRepository = tenantRepository;
     this.userRepository = userRepository;
     this.refreshTokenRepository = refreshTokenRepository;
     this.tokenService = tokenService;
     this.passwordEncoder = passwordEncoder;
+    this.loginAttemptService = loginAttemptService;
   }
 
   public AuthTokenResponse login(String tenantId, String email, String password) {
     resolveActiveTenant(tenantId);
+    loginAttemptService.assertNotLocked(tenantId, email);
     UserDocument user = userRepository.findByTenantIdAndEmailIgnoreCase(tenantId, email)
         .filter(UserDocument::isActive)
-        .orElseThrow(() -> new AuthException("Invalid credentials"));
+        .orElse(null);
 
-    if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+    if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+      loginAttemptService.recordFailure(tenantId, email);
       throw new AuthException("Invalid credentials");
     }
+
+    loginAttemptService.clearFailures(tenantId, email);
     return issueTokens(user);
   }
 

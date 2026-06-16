@@ -6,6 +6,8 @@ spring:
     name: auth-service
   config:
     import: optional:file:./config/localhost.properties
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
   data:
     mongodb:
       uri: ${AUTH_MONGODB_URI:mongodb://mongo:27017}
@@ -23,10 +25,18 @@ auth:
     refresh-token-hmac-key: ${AUTH_REFRESH_TOKEN_HMAC_KEY:change-refresh-hmac-key}
   redis:
     enabled: ${AUTH_REDIS_ENABLED:false}
+  security:
+    login-max-attempts: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
+    login-lockout-seconds: ${AUTH_LOGIN_LOCKOUT_SECONDS:900}
+    login-failure-window-seconds: ${AUTH_LOGIN_FAILURE_WINDOW_SECONDS:900}
+    login-rate-limit-per-ip: ${AUTH_LOGIN_RATE_LIMIT_PER_IP:10}
+    login-rate-limit-window-seconds: ${AUTH_LOGIN_RATE_LIMIT_WINDOW_SECONDS:60}
+    refresh-rate-limit-per-ip: ${AUTH_REFRESH_RATE_LIMIT_PER_IP:30}
+    refresh-rate-limit-window-seconds: ${AUTH_REFRESH_RATE_LIMIT_WINDOW_SECONDS:60}
 
 seed:
   tenant:
-    id: ${AUTH_SEED_TENANT_ID:blog-cms}
+    id: ${AUTH_SEED_TENANT_ID:my-app}
   user:
     email: ${AUTH_SEED_USER_EMAIL:user@example.com}
     password: ${AUTH_SEED_USER_PASSWORD:change-me}

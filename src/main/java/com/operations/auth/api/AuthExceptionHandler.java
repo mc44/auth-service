@@ -2,6 +2,7 @@ package com.operations.auth.api;
 
 import com.operations.auth.api.dto.ErrorResponse;
 import com.operations.auth.service.AuthException;
+import com.operations.auth.service.RateLimitException;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,13 @@ public class AuthExceptionHandler {
   public ResponseEntity<ErrorResponse> handleAuth(AuthException ex) {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .body(new ErrorResponse("AUTH_ERROR", ex.getMessage(), Instant.now()));
+  }
+
+  @ExceptionHandler(RateLimitException.class)
+  public ResponseEntity<ErrorResponse> handleRateLimit(RateLimitException ex) {
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+        .header("Retry-After", "60")
+        .body(new ErrorResponse("RATE_LIMITED", ex.getMessage(), Instant.now()));
   }
 
   @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
